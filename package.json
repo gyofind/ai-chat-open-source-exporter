@@ -7,7 +7,7 @@
   "scripts": {
     "build": "webpack",
     "watch": "webpack --watch",
-    "start": "web-ext run --source-dir ./dist --firefox=firefoxdeveloperedition",
+    "start": "web-ext run --source-dir ./dist --firefox=firefoxdeveloperedition --start-url https://chat.mistral.ai/chat",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   },

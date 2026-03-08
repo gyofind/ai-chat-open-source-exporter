@@ -22,12 +22,31 @@ function detectPlatform() {
 }
 
 function exportChat(format) {
-  const platform = detectPlatform();
-  if (!platform) return;
+  const platformName = detectPlatform();
+  
+  // We need the Class itself to call static methods
+  const platformClass = platforms[platformName]?.constructor;
 
-  const messages = platforms[platform].extractMessages();
-  let data,
-    filename = `ai-chat-${platform}-${new Date().toISOString().slice(0, 10)}`;
+  if (!platformClass) {
+    console.error("AI Exporter: Platform class not found for:", platformName);
+    return;
+  }
+
+  console.log("AI Exporter: Starting extraction for", platformName);
+
+  // Call the static method on the Class
+  const dataPackage = platformClass.extractMessages();
+  
+  console.log("AI Exporter: Data Package result:", dataPackage);
+
+  if (!dataPackage || !dataPackage.messages || dataPackage.messages.length === 0) {
+    console.warn("AI Exporter: No messages found on page.");
+    return; 
+  }
+
+  const messages = dataPackage.messages;
+  let data;
+  let filename = `ai-chat-${platformName}-${new Date().toISOString().slice(0, 10)}`;
 
   switch (format) {
     case "json":
@@ -40,6 +59,7 @@ function exportChat(format) {
       data = generatePDF(messages);
       break;
     default:
+      console.error("AI Exporter: Unknown format", format);
       return;
   }
 

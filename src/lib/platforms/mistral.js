@@ -15,17 +15,29 @@ export default class Mistral extends AIPlatform {
     return window.location.hostname.includes("mistral.ai");
   }
 
-  static extractMessages() {
+static extractMessages() {
     const messages = [];
-    document
-      .querySelectorAll("[data-role='user'], [data-role='assistant']")
-      .forEach((el) => {
-        messages.push({
-          role: el.getAttribute("data-role"),
-          content: cleanContent(el.textContent),
-          timestamp: extractTimestamp(el),
-        });
+    
+    // Updated selector for Mistral's current chat bubble structure
+    const messageNodes = document.querySelectorAll('main article, div[class*="message"], div[data-testid*="message"]');
+    
+    console.log(`AI Exporter: Found ${messageNodes.length} message nodes.`);
+
+    messageNodes.forEach((el) => {
+      // Logic to determine if the message is from the user or assistant
+      const isUser = el.className.includes('user') || el.innerHTML.includes('User'); 
+      const role = isUser ? "user" : "assistant";
+      
+      // Attempt to find the text container (usually inside a .prose div)
+      const contentNode = el.querySelector('.prose') || el;
+
+      messages.push({
+        role: role,
+        content: cleanContent(contentNode.innerText),
+        timestamp: new Date().toISOString(),
       });
+    });
+
     return {
       platform: "mistral",
       title: document.title.replace(" | Mistral AI", ""),

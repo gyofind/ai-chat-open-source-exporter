@@ -26,7 +26,9 @@ export function wrapInFencedDiv(role, content) {
   const messageId = `msg-${role}-${Date.now()}`;
   const escapedContent = escapeTripleColons(content);
   return `::: {.ai-chat-message #${messageId} data-role="${role}"}
+
 ${escapedContent}
+
 :::`;
 }
 
