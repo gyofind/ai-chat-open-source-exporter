@@ -1,6 +1,6 @@
 import Mistral from "../lib/platforms/mistral.js";
-import Claude from "../lib/platforms/claude.js";
-import Gemini from "../lib/platforms/gemini.js";
+//import Claude from "../lib/platforms/claude.js";
+//import Gemini from "../lib/platforms/gemini.js";
 import {
   generateJSON,
   generateMarkdown,
@@ -9,15 +9,15 @@ import {
 
 const platforms = {
   mistral: new Mistral(),
-  claude: new Claude(),
-  gemini: new Gemini(),
+  //claude: new Claude(),
+  //gemini: new Gemini(),
 };
 
 function detectPlatform() {
   const hostname = window.location.hostname;
   if (hostname.includes("mistral")) return "mistral";
-  if (hostname.includes("claude")) return "claude";
-  if (hostname.includes("gemini")) return "gemini";
+  //if (hostname.includes("claude")) return "claude";
+  //if (hostname.includes("gemini")) return "gemini";
   return null;
 }
 

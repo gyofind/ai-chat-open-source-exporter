@@ -1,6 +1,10 @@
 import { jsPDF } from "jspdf";
 import TurndownService from "turndown";
 
+export function generateJSON(messages) {
+  return JSON.stringify(messages, null, 2);
+}
+
 export function generatePDF(messages) {
   const doc = new jsPDF();
   let y = 10;
@@ -28,12 +32,4 @@ ${escapedContent}
 
 export function escapeTripleColons(content) {
   return content.replace(/:::/g, '\\:::'); // Escape triple colons
-}
-
-export function generatePDF(messages) {
-  const doc = new jsPDF();
-  messages.forEach((msg, i) => {
-    doc.text(10, 10 + (i * 10), `${msg.role}: ${msg.content}`);
-  });
-  return doc.output("blob");
 }

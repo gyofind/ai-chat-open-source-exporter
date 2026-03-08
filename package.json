@@ -5,23 +5,27 @@
   "description": "Export AI chat conversations locally to JSON, Markdown, or PDF. Open-source and privacy-focused.",
   "main": "src/background/background.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "build": "webpack",
     "watch": "webpack --watch",
+    "start": "web-ext run --source-dir ./dist --firefox=firefoxdeveloperedition",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
-    "run": "web-ext run"
+    "lint:fix": "eslint . --fix"
   },
   "author": "gyofind",
   "license": "GPL-3.0",
   "devDependencies": {
+    "@babel/core": "^7.29.0",
+    "@babel/preset-env": "^7.29.0",
     "@eslint/js": "^10.0.1",
+    "babel-loader": "^10.1.0",
+    "copy-webpack-plugin": "^11.0.0",
     "eslint": "^10.0.3",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.5",
     "prettier": "^3.8.1",
     "web-ext": "^9.4.0",
-    "webpack": "^5.91.0"
+    "webpack": "^5.105.4",
+    "webpack-cli": "^6.0.1"
   },
   "dependencies": {
     "jspdf": "^4.2.0",
