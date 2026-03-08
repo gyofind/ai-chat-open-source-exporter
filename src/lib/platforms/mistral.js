@@ -1,4 +1,5 @@
 import AIPlatform from "../base.js";
+import { wrapInFencedDiv } from "../../lib/utils/helpers.js";
 
 export default class Mistral extends AIPlatform {
   constructor() {
@@ -30,6 +31,12 @@ export default class Mistral extends AIPlatform {
       title: document.title.replace(" | Mistral AI", ""),
       messages,
     };
+  }
+
+  static generateMarkdown(messages) {
+    return messages
+      .map((msg) => wrapInFencedDiv(msg.role, msg.content))
+      .join("\n\n");
   }
 }
 

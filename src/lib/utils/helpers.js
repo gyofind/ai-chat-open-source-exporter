@@ -1,4 +1,5 @@
 import { jsPDF } from "jspdf";
+import TurndownService from "turndown";
 
 export function generatePDF(messages) {
   const doc = new jsPDF();
@@ -10,13 +11,20 @@ export function generatePDF(messages) {
   return doc.output("blob");
 }
 
-import TurndownService from "turndown";
-
 export function generateMarkdown(messages) {
   const turndownService = new TurndownService();
   return messages
-    .map((msg) => `**${msg.role}**:\n${turndownService.turndown(msg.content)}`)
-    .join("\n\n---\n\n");
+    .map((msg) => wrapInFencedDiv(msg.role, turndownService.turndown(msg.content)))
+    .join("\n\n");
+}
+
+export function wrapInFencedDiv(role, content) {
+  const messageId = `msg-${role}-${Date.now()}`;
+  return `::: {.ai-chat-message #${messageId} data-role="${role}"}
+
+${content}
+
+:::`;
 }
 
 export function generatePDF(messages) {
