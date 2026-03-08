@@ -1,1 +1,5 @@
 node_modules
+test/test_mistral_chat_sample.html
+test/test_mistral_output.md
+test/test_mistral_chat_sample-long.html
+test/test_mistral_output-long.md
