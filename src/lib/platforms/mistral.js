@@ -15,7 +15,7 @@ export default class Mistral extends AIPlatform {
     return window.location.hostname.includes("mistral.ai");
   }
 
-  static extract() {
+  static extractMessages() {
     const messages = [];
     document
       .querySelectorAll("[data-role='user'], [data-role='assistant']")

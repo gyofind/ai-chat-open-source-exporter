@@ -6,6 +6,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default {
   mode: "development", // Change to 'production' only when finishing
+  devtool: "cheap-module-source-map",
   entry: {
     background: "./src/background/background.js",
     content: "./src/content/content.js",
