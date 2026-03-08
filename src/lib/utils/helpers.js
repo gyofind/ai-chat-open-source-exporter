@@ -16,10 +16,20 @@ export function generatePDF(messages) {
 }
 
 export function generateMarkdown(messages) {
-  const turndownService = new TurndownService();
+  const turndownService = new TurndownService({
+    headingStyle: 'atx',
+    hr: '---',
+    bulletListMarker: '-',
+    codeBlockStyle: 'fenced'
+  });
+
   return messages
-    .map((msg) => wrapInFencedDiv(msg.role, turndownService.turndown(msg.content)))
-    .join("\n\n");
+    .map((msg) => {
+      // Convert the HTML content to Markdown
+      const markdownBody = turndownService.turndown(msg.content);
+      return wrapInFencedDiv(msg.role, markdownBody);
+    })
+    .join("\n\n---\n\n"); // Added a visual separator between messages
 }
 
 export function wrapInFencedDiv(role, content) {

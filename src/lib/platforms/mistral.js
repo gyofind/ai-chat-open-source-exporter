@@ -28,12 +28,13 @@ static extractMessages() {
       const isUser = el.className.includes('user') || el.innerHTML.includes('User'); 
       const role = isUser ? "user" : "assistant";
       
-      // Attempt to find the text container (usually inside a .prose div)
+      // Target the content container
       const contentNode = el.querySelector('.prose') || el;
 
       messages.push({
         role: role,
-        content: cleanContent(contentNode.innerText),
+        // CHANGED: Use innerHTML so Turndown can see the structure
+        content: contentNode.innerHTML, 
         timestamp: new Date().toISOString(),
       });
     });
