@@ -50,8 +50,8 @@ async function runSnapshotTest() {
     const markdownOutput = generateMarkdown(dataPackage.messages);
 
     // 5. Save the History Pair
-    const sourceHistoryPath = path.join(HISTORY_DIR, `${id}-source.html`);
-    const outputHistoryPath = path.join(HISTORY_DIR, `${id}-output.md`);
+    const sourceHistoryPath = path.join(HISTORY_DIR, `tm2m-${id}-source.html`);
+    const outputHistoryPath = path.join(HISTORY_DIR, `tm2m-${id}-output.md`);
 
     fs.writeFileSync(sourceHistoryPath, rawHtml, 'utf-8');
     fs.writeFileSync(outputHistoryPath, markdownOutput, 'utf-8');

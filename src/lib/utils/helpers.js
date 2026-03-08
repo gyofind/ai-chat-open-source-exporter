@@ -17,23 +17,20 @@ export function generatePDF(messages) {
 
 export function generateMarkdown(messages) {
   const turndownService = new TurndownService({
-    headingStyle: 'atx',
-    hr: '---',
-    bulletListMarker: '-',
-    codeBlockStyle: 'fenced'
+    // --- Configuring TurndownService for consistent output ---
+    headingStyle: 'atx',          // Use ATX headings (e.g., ## My Heading)
+    codeBlockStyle: 'fenced',     // Use fenced code blocks (```python\ncode\n```)
+    bulletListMarker: '-',        // Use hyphens for unordered list markers
+    // Add any other desired Turndown options here for consistency
+    // --- End TurndownService configuration ---
   });
-
   return messages
-    .map((msg) => {
-      // Convert the HTML content to Markdown
-      const markdownBody = turndownService.turndown(msg.content);
-      return wrapInFencedDiv(msg.role, markdownBody);
-    })
-    .join("\n\n---\n\n"); // Added a visual separator between messages
+    .map((msg) => wrapInFencedDiv(msg.role, turndownService.turndown(msg.content)))
+    .join("\n\n");
 }
 
 export function wrapInFencedDiv(role, content) {
-  const messageId = `msg-${role}-${Date.now()}`;
+  const messageId = `msg-${role}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
   const escapedContent = escapeTripleColons(content);
   return `::: {.ai-chat-message #${messageId} data-role="${role}"}
 
