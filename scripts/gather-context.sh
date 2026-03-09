@@ -4,14 +4,20 @@
 ROOT_DIR=$(git rev-parse --show-toplevel)
 cd "$ROOT_DIR" || exit
 
-# Define the hidden temp directory and file
 TMP_DIR=".tmp"
 OUTPUT_FILE="$TMP_DIR/project_context.txt"
+INCLUDE_SAMPLE=false
 
-# Create .tmp if it doesn't exist
+# Check for -s or --sample flags
+for arg in "$@"; do
+  if [ "$arg" == "-s" ] || [ "$arg" == "--sample" ]; then
+    INCLUDE_SAMPLE=true
+  fi
+done
+
 mkdir -p "$TMP_DIR"
 
-echo "🔍 Gathering project context from: $ROOT_DIR"
+echo "🔍 Gathering project context..."
 
 {
   echo "==============================================================="
@@ -40,10 +46,24 @@ echo "🔍 Gathering project context from: $ROOT_DIR"
     fi
   done
 
+  # Optional Sample Logic
+  if [ "$INCLUDE_SAMPLE" = true ]; then
+    echo -e "\n\n==============================================================="
+    echo "LATEST TEST SNAPSHOT SAMPLE"
+    echo "==============================================================="
+    # Find the most recently modified .md file in the history folder
+    LATEST_MD=$(ls -t tests/snapshots/history/*.md 2>/dev/null | head -n 1)
+    if [ -n "$LATEST_MD" ]; then
+      echo "--- SAMPLE SOURCE: $LATEST_MD ---"
+      cat "$LATEST_MD"
+    else
+      echo "--- No sample markdown found in tests/snapshots/history/ ---"
+    fi
+  fi
+
   echo -e "\n\n==============================================================="
-  echo "SOURCE CODE (Logic & Scrapers)"
+  echo "SOURCE CODE"
   echo "==============================================================="
-  
   find src -name "*.js" | while read -r file; do
     echo -e "\n--- FILE: $file ---"
     cat "$file"
@@ -59,27 +79,15 @@ echo "🔍 Gathering project context from: $ROOT_DIR"
 echo "✅ Context generated at $OUTPUT_FILE"
 
 # --- CLIPBOARD LOGIC ---
-echo "📋 Copying to clipboard..."
-
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    # MacOS
     cat "$OUTPUT_FILE" | pbcopy
-    echo "✔ Copied to MacOS clipboard."
+    STR="MacOS"
 elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    # Linux (requires xclip or xsel)
-    if command -v xclip >/dev/null; then
-        cat "$OUTPUT_FILE" | xclip -selection clipboard
-        echo "✔ Copied to Linux clipboard (via xclip)."
-    elif command -v xsel >/dev/null; then
-        cat "$OUTPUT_FILE" | xsel --clipboard --input
-        echo "✔ Copied to Linux clipboard (via xsel)."
-    else
-        echo "❌ Error: Install 'xclip' or 'xsel' to use clipboard on Linux."
-    fi
+    if command -v xclip >/dev/null; then cat "$OUTPUT_FILE" | xclip -selection clipboard; STR="Linux (xclip)";
+    elif command -v xsel >/dev/null; then cat "$OUTPUT_FILE" | xsel --clipboard --input; STR="Linux (xsel)"; fi
 elif [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" ]]; then
-    # Windows (Git Bash / WSL)
     cat "$OUTPUT_FILE" | clip.exe
-    echo "✔ Copied to Windows clipboard."
-else
-    echo "⚠️  Unknown OS. Please manually copy: $OUTPUT_FILE"
+    STR="Windows"
 fi
+
+echo "✅ Context ($([ "$INCLUDE_SAMPLE" = true ] && echo "with sample" || echo "standard")) copied to $STR clipboard."

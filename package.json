@@ -9,7 +9,9 @@
     "watch": "webpack --watch",
     "start": "bash scripts/start-firefox.sh",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "ctx": "bash scripts/gather-context.sh",
+    "ctx:sample": "bash scripts/gather-context.sh --sample"
   },
   "author": "gyofind",
   "license": "GPL-3.0",
