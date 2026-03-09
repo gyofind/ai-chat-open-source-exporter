@@ -56,7 +56,8 @@ This document serves as the single source of truth for all architectural decisio
 * **Git Hygiene**: 
     * **Ignore**: `.DS_Store`, `node_modules`, `dist/`, and `.firefox-dev-profile/`.
     * **Track**: SVG source files and the generation scripts.
-
+* **Context Gathering**: Use `npm run ctx` to generate a project-wide context file for AI assistants.
+    * Use `npm run ctx:sample` to include the most recent Markdown export from `tests/snapshots/history/`. This is vital for debugging scraper issues with real-world data.
 
 ---
 

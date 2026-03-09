@@ -17,6 +17,11 @@ done
 
 mkdir -p "$TMP_DIR"
 
+# Silent Lint Check: Only speaks up on failure
+if ! npm run lint > /dev/null 2>&1; then
+  echo "⚠️  NOTE: Lint errors detected in src/. Context may contain syntax issues."
+fi
+
 echo "🔍 Gathering project context (High Fidelity)..."
 
 {
@@ -36,9 +41,8 @@ echo "🔍 Gathering project context (High Fidelity)..."
   # 1. Package.json with placeholder for devDeps
   if [ -f "package.json" ]; then
     echo -e "\n--- FILE: package.json ---"
-    # Removes the devDependencies block and replaces with a placeholder
-    # sed '$d' removes the final closing brace so we can append our own
-    sed '/"devDependencies": {/,/}/d' package.json | sed '$d' | sed 's/},/}/'
+    # Remove devDeps, remove the very last '}', then fix the trailing comma
+    sed '/"devDependencies": {/,/}/d' package.json | sed '$d' | sed '$ s/$/ ,/' | sed 's/, ,/,/'
     echo -e '  "devDependencies": { /* ... removed for context brevity ... */ }\n}'
   fi
 
@@ -48,15 +52,21 @@ echo "🔍 Gathering project context (High Fidelity)..."
     if [ "$file" != "package.json" ] && [ -f "$file" ]; then
       echo -e "\n--- FILE: $file ---"
       
-      if [ "$file" == "documentation/AI_INSTRUCTIONS.md" ]; then
-        # Delete from the header to the end of file, then append placeholder
-        sed '/## 📄 File Descriptions/,$d' "$file"
-        echo -e "## 📄 File Descriptions\n\n/* ... descriptions removed; actual files are provided below in the SOURCE CODE section ... */"
-      else
-        cat "$file"
-      fi
+      case "$file" in
+        "documentation/AI_INSTRUCTIONS.md")
+          if grep -q "## 📄 File Descriptions" "$file"; then
+            sed '/## 📄 File Descriptions/,$d' "$file"
+            echo -e "## 📄 File Descriptions\n\n/* ... descriptions removed; actual files are provided below in the SOURCE CODE section ... */"
+          else
+            cat "$file"
+          fi
+          ;;
+        *)
+          cat "$file"
+          ;;
+      esac
     fi
-  done  
+  done
   
   # 3. Optional Sample
   if [ "$INCLUDE_SAMPLE" = true ]; then
@@ -98,15 +108,24 @@ elif [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" ]]; then
     OS_NAME="Windows"
 fi
 
-# --- TOKEN ESTIMATION ---
+# --- TOKEN ESTIMATION & WARNING ---
 CHAR_COUNT=$(wc -c < "$OUTPUT_FILE")
 # Rough estimate: 4 chars per token
 TOKEN_EST=$((CHAR_COUNT / 4))
+TOKEN_LIMIT=30000 
 
 echo "---------------------------------------------------------------"
 echo "📊 Context Stats:"
 echo "   - Mode: $([ "$INCLUDE_SAMPLE" = true ] && echo "with sample" || echo "standard")"
 echo "   - Characters: $CHAR_COUNT"
 echo "   - Est. Tokens: ~$TOKEN_EST"
+
+if [ "$TOKEN_EST" -gt "$TOKEN_LIMIT" ]; then
+    echo "⚠️  WARNING: Context is large ($TOKEN_EST tokens)."
+    echo "   Consider removing old snapshots or pruning documentation."
+else
+    echo "✅ Token count is well within the safety limit."
+fi
+
 echo "✅ Copied to $OS_NAME clipboard."
 echo "---------------------------------------------------------------"
