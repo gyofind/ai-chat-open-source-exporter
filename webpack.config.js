@@ -23,7 +23,7 @@ export default {
         { from: "manifest.json", to: "." },
         { from: "src/popup/popup.html", to: "." }, // Adjusted path
         //{ from: "src/popup/popup.css", to: "." },
-        { from: "icons", to: "icons" },
+        { from: "public/icons", to: "icons" },
       ],
     }),
   ],

@@ -2,3 +2,10 @@ node_modules
 tests/snapshots/mistral-page-source.html
 tests/snapshots/history/*
 documentation/AI_INSTRUCTIONS.md
+
+# OS Metadata
+.DS_Store
+Thumbs.db
+
+# Thumbnails
+._*
