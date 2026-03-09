@@ -2,6 +2,9 @@ node_modules
 tests/snapshots/mistral-page-source.html
 tests/snapshots/history/*
 
+# Context export
+.tmp/
+
 # Firefox local development profile
 .firefox-dev-profile/
 
