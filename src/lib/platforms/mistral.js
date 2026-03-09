@@ -18,22 +18,28 @@ export default class Mistral extends AIPlatform {
 static extractMessages() {
     const messages = [];
     
-    // Updated selector for Mistral's current chat bubble structure
-    const messageNodes = document.querySelectorAll('main article, div[class*="message"], div[data-testid*="message"]');
+    // Select potential nodes
+    const allNodes = document.querySelectorAll('main article, div[data-testid*="message"]');
     
-    console.log(`AI Exporter: Found ${messageNodes.length} message nodes.`);
+    // FILTER: Only keep nodes that do not have another message node as a parent
+    const messageNodes = Array.from(allNodes).filter(node => {
+      return !node.parentElement.closest('article, [data-testid*="message"]');
+    });
+    
+    console.log(`AI Exporter: Found ${messageNodes.length} unique message nodes.`);
 
     messageNodes.forEach((el) => {
-      // Logic to determine if the message is from the user or assistant
-      const isUser = el.className.includes('user') || el.innerHTML.includes('User'); 
+      const isUser = el.className.includes('user') || 
+                     el.getAttribute('data-testid')?.includes('user') || 
+                     el.innerHTML.includes('You'); 
+      
       const role = isUser ? "user" : "assistant";
       
-      // Target the content container
+      // Target the content container (.prose is Mistral's standard text body)
       const contentNode = el.querySelector('.prose') || el;
 
       messages.push({
         role: role,
-        // CHANGED: Use innerHTML so Turndown can see the structure
         content: contentNode.innerHTML, 
         timestamp: new Date().toISOString(),
       });
@@ -44,12 +50,6 @@ static extractMessages() {
       title: document.title.replace(" | Mistral AI", ""),
       messages,
     };
-  }
-
-  static generateMarkdown(messages) {
-    return messages
-      .map((msg) => wrapInFencedDiv(msg.role, msg.content))
-      .join("\n\n");
   }
 }
 
