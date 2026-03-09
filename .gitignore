@@ -1,7 +1,6 @@
 node_modules
 tests/snapshots/mistral-page-source.html
 tests/snapshots/history/*
-documentation/AI_INSTRUCTIONS.md
 
 # Firefox local development profile
 .firefox-dev-profile/
