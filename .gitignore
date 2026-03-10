@@ -1,6 +1,7 @@
 node_modules
 tests/snapshots/mistral-page-source.html
 tests/snapshots/history/*
+dist/
 
 # Context export
 .tmp/
