@@ -8,9 +8,9 @@ import {
 } from "../lib/utils/helpers.js";
 
 const platforms = {
-  mistral: new Mistral(),
-  //claude: new Claude(),
-  //gemini: new Gemini(),
+  mistral: Mistral, 
+  // claude: Claude,
+  // gemini: Gemini,
 };
 
 function detectPlatform() {
@@ -24,8 +24,8 @@ function detectPlatform() {
 function exportChat(format) {
   const platformName = detectPlatform();
   
-  // We need the Class itself to call static methods
-  const platformClass = platforms[platformName]?.constructor;
+  // We need the Class itself to call static methods. No need for .constructor anymore
+  const platformClass = platforms[platformName];
 
   if (!platformClass) {
     console.error("AI Exporter: Platform class not found for:", platformName);

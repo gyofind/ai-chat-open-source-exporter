@@ -6,11 +6,36 @@ This document serves as the single source of truth for all architectural decisio
 > This document is public to assist both human contributors and AI coding assistants 
 > in maintaining the architectural integrity of this GPL-licensed project.
 
+## 🛡️ Code Integrity & Preservation (STRICT)
+
+* **Full Fidelity**: Every code response **MUST** include all existing comments, JSDoc.
+* **Minimal Surface Area**: Do not reformat, re-indent, or modify unrelated lines of code. Stripping code or comments for "brevity" is strictly prohibited.
+* **No Silent Deletions**: If a piece of logic is no longer needed, it must be explicitly discussed before removal.
+
 ## 🏗 Core Architecture
 
 * **Orchestration**: `src/content/content.js` manages the high-level flow. It detects the active AI platform and then calls static methods on the respective Platform classes to extract messages.
 * **Platform Classes**: Each AI platform (e.g., Mistral, Claude, Gemini) must have its own class (e.g., `src/lib/platforms/mistral.js`) which *must* extend the `AIPlatform` base class.
-* **Static Methods**: Key interaction methods like `detect()` and `extractMessages()` **MUST remain static**. The orchestrator calls these directly on the Class constructor.
+* **Static Methods**: Key interaction methods like `detect()` and `extractMessages()` **MUST remain static**. The orchestrator calls these static methods directly on the Platform classes.
+
+## 🔄 Platform-Agnostic Extraction Strategy
+
+To maintain a scalable architecture, all scrapers must follow the **HTML-First** pipeline:
+
+1.  **Raw Extraction**: The `extractMessages()` method performs zero text cleaning. Its sole job is to identify message nodes and extract their `innerHTML` into a `content_html` property.
+2.  **Agnostic Data Package**: Scrapers must return a standardized object:
+    ```javascript
+    {
+      conversation_id: string,
+      messages: [{ role, message_id, timestamp, content_html, formats: [] }]
+    }
+    ```
+3.  **Separation of Concerns**: Processing (like Markdown conversion or PDF stripping) is strictly forbidden inside the Platform class. It must be handled by `src/lib/utils/helpers.js` based on the user's selected format.
+4.  **Adding New Platforms**:
+    * Create `src/lib/platforms/name.js` extending `AIPlatform`.
+    * Define a `static selectors` object containing `container`, `timestamp`, and `content`.
+    * Implement `static detect()` and `static extractMessages()`.
+    * Register the new class in `src/content/content.js`.
 
 ## 🎨 Assets & Branding
 
@@ -24,19 +49,19 @@ This document serves as the single source of truth for all architectural decisio
 
 ## 🔍 Extraction Logic (Scrapers)
 
-*   **DOM Independence**: When manipulating or cleaning content that might cause UI reflows or flickering, consider using `cloneNode(true)` on the relevant DOM elements before performing extensive modifications, or working on detached DOM nodes.
-*   **Selector Specificity**: Always prioritize highly specific selectors, especially `data-testid` attributes where available, over generic or obfuscated CSS classes. This reduces breakage due to minor UI changes on the target platforms. When `data-testid` is not present, use a combination of stable class names and attribute selectors.
-*   **De-duplication**: Scrapers (`extractMessages` methods) must carefully design their `querySelectorAll` logic and subsequent processing to filter nodes. The goal is to ensure that parent containers are not inadvertently selected alongside their children if both represent parts of a single logical message. Techniques like using `.closest()` for ascending searches or `.filter()` on node lists are essential to prevent duplicate message entries.
-*   **Timestamp Extraction**: Timestamps (e.g., "Feb 8, 9:48pm") must be extracted as separate metadata and **NOT** be included as part of the message's main content (`content` field). They should be stored in a dedicated `timestamp` property within the message object.
+* **Standardized Scraper Interface**: Every platform class must define a `static selectors` object and a `static extractMessages()` method. Inside static methods, access selectors via `this.selectors`.
+* **Raw HTML Strategy**: Scrapers must perform **zero** content cleaning. Their sole responsibility is to extract the `innerHTML` of message nodes into a `content_html` property. All formatting and conversion logic belongs in `src/lib/utils/helpers.js`.
+* **Selector Prioritization**: Use the most stable attributes available in `static selectors`. Prioritize `data-testid` or specific data attributes (e.g., `data-message-author-role`) over obfuscated CSS classes to ensure long-term stability.
+* **De-duplication**: Design `querySelectorAll` logic to target the unique parent container for each message. Ensure children (like individual text parts) are not selected as separate messages if they belong to a single logical exchange.
+* **Metadata Isolation**: Timestamps and IDs must be extracted as separate metadata fields. They **MUST NOT** be merged into the `content_html` string.
 
 ## 🛠 Formatting Standards
 
-*   **Markdown Conversion**: The `TurndownService` library (`turndown`) in `src/lib/utils/helpers.js` is the standard for converting HTML content into Markdown. Configure it for consistent output (e.g., `headingStyle: 'atx'`, `codeBlockStyle: 'fenced'`).
-*   **Fenced Divs**: All extracted chat messages, once converted to Markdown, **MUST** be wrapped using the `wrapInFencedDiv` helper function (`src/lib/utils/helpers.js`). This adheres to the Pandoc-style fenced div standard, ensuring machine-readability and proper rendering.
-    *   Fenced divs require a blank line immediately after the opening `:::` marker and immediately before the closing `:::` marker for correct parsing by most Markdown renderers. The `wrapInFencedDiv` helper must enforce this.
-*   **ID Generation**: Each fenced div (representing a message) **MUST** have a unique ID. The `wrapInFencedDiv` helper generates this ID using a combination of `msg-${role}-${Date.now()}-${Math.random()}` to ensure uniqueness across sessions and messages.
-*   **Triple Colon Escaping**: Any occurrences of `:::` within the actual message content must be escaped (e.g., to `\:::`) to prevent them from being misinterpreted as additional fenced div delimiters. The `escapeTripleColons` helper in `src/lib/utils/helpers.js` handles this.
-*   **Message Separator**: A consistent separator (`\n\n---\n\n`) should be used between individual messages in the final Markdown output for better readability.
+* **Downstream Processing**: The `TurndownService` in `helpers.js` is the single point of truth for HTML-to-Markdown conversion. It must be configured for `atx` headers and `fenced` code blocks.
+* **Pandoc-Style Fenced Divs**: All messages in the final Markdown output **MUST** be wrapped using the `wrapInFencedDiv` helper. This ensures machine-readability by encapsulating metadata (ID, Role, Timestamp) in the div attributes.
+* **Fenced Div Formatting**: The `wrapInFencedDiv` helper must enforce a blank line after the opening `:::` and before the closing `:::` to ensure valid Markdown parsing.
+* **ID Persistence**: Use the platform's native message ID (e.g., `data-message-id`) whenever available to ensure consistency between exports. Fall back to a unique generated ID (e.g., using Math.random) only if a native platform ID is missing.
+* **Content Escaping**: Any triple colons (`:::`) inside the actual chat content must be escaped to `\:::` via the `escapeTripleColons` helper to prevent breaking the fenced div structure.
 
 ## 🧪 Snapshot Testing Suite
 - **Location**: `tests/snapshots/`
