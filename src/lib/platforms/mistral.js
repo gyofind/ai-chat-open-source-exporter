@@ -15,42 +15,61 @@ export default class Mistral extends AIPlatform {
     return window.location.hostname.includes("mistral.ai");
   }
 
+/**
+ * Mistral Message Extractor
+ * Returns a structured JSON object of the conversation.
+ */
 static extractMessages() {
-    const messages = [];
-    
-    // Select potential nodes
-    const allNodes = document.querySelectorAll('main article, div[data-testid*="message"]');
-    
-    // FILTER: Only keep nodes that do not have another message node as a parent
-    const messageNodes = Array.from(allNodes).filter(node => {
-      return !node.parentElement.closest('article, [data-testid*="message"]');
-    });
-    
-    console.log(`AI Exporter: Found ${messageNodes.length} unique message nodes.`);
+  // 1. Identify the conversation ID from the URL
+  const conversationId = window.location.pathname.split('/').pop();
 
-    messageNodes.forEach((el) => {
-      const isUser = el.className.includes('user') || 
-                     el.getAttribute('data-testid')?.includes('user') || 
-                     el.innerHTML.includes('You'); 
-      
-      const role = isUser ? "user" : "assistant";
-      
-      // Target the content container (.prose is Mistral's standard text body)
-      const contentNode = el.querySelector('.prose') || el;
+  // 2. Select all message containers using the stable role attribute
+  const messageNodes = document.querySelectorAll('[data-message-author-role]');
 
-      messages.push({
-        role: role,
-        content: contentNode.innerHTML, 
-        timestamp: new Date().toISOString(),
-      });
-    });
+  const messages = Array.from(messageNodes).map((node, index) => {
+    // metadata extraction
+    const role = node.getAttribute('data-message-author-role'); // "user" or "assistant"
+    const messageId = node.getAttribute('data-message-id') || node.id;
+    
+    // FIX: Use optional chaining to avoid "trim of undefined"
+    const timestampNode = node.querySelector('.text-hint.text-sm');
+    const timestamp = timestampNode?.innerText?.trim() || null;
+
+    // 3. Extract the Content
+    // We target the specific part that contains the actual message text/html
+    // Assistant uses [data-testid="text-message-part"]
+    // User uses .select-text
+    const contentNode = node.querySelector('[data-testid="text-message-part"], .select-text');
+    
+    // FIX: Fallback to empty string if contentNode isn't found
+    const rawHtml = contentNode ? contentNode.innerHTML : "";
+
+    // 4. Determine Formats present in the HTML
+    const formats = [];
+    if (rawHtml.includes('<table')) formats.push("table");
+    if (rawHtml.includes('code-block') || rawHtml.includes('<pre')) formats.push("code");
+    if (rawHtml.includes('katex')) formats.push("latex");
+    if (rawHtml.includes('<blockquote')) formats.push("blockquote");
+    if (formats.length === 0 && rawHtml.length > 0) formats.push("text");
 
     return {
-      platform: "mistral",
-      title: document.title.replace(" | Mistral AI", ""),
-      messages,
+      index: index,
+      message_id: messageId,
+      role: role,
+      timestamp: timestamp,
+      formats: formats,
+      // The "raw" payload for later processing
+      content_html: rawHtml.trim() 
     };
-  }
+  });
+
+  return {
+    conversation_id: conversationId,
+    extracted_at: new Date().toISOString(),
+    total_messages: messages.length,
+    messages: messages
+  };
+}
 }
 
 // Helper functions (shared or platform-specific)

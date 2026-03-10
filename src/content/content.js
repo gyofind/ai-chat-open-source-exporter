@@ -32,31 +32,28 @@ function exportChat(format) {
     return;
   }
 
-  console.log("AI Exporter: Starting extraction for", platformName);
-
-  // Call the static method on the Class
+  // dataPackage is the object { conversation_id, messages, ... }
   const dataPackage = platformClass.extractMessages();
   
-  console.log("AI Exporter: Data Package result:", dataPackage);
-
   if (!dataPackage || !dataPackage.messages || dataPackage.messages.length === 0) {
     console.warn("AI Exporter: No messages found on page.");
     return; 
   }
 
-  const messages = dataPackage.messages;
   let data;
   let filename = `ai-chat-${platformName}-${new Date().toISOString().slice(0, 10)}`;
 
   switch (format) {
     case "json":
-      data = generateJSON(messages);
+      // Pass only messages array for standard JSON export
+      data = generateJSON(dataPackage.messages); 
       break;
     case "md":
-      data = generateMarkdown(messages);
+      // Pass the WHOLE package because generateMarkdown iterates over conversation.messages
+      data = generateMarkdown(dataPackage); 
       break;
     case "pdf":
-      data = generatePDF(messages);
+      data = generatePDF(dataPackage.messages);
       break;
     default:
       console.error("AI Exporter: Unknown format", format);

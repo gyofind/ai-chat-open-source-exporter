@@ -47,7 +47,7 @@ async function runSnapshotTest() {
       console.warn('⚠️ No messages found by the scraper.');
     }
 
-    const markdownOutput = generateMarkdown(dataPackage.messages);
+    const markdownOutput = generateMarkdown(dataPackage);
 
     // 5. Save the History Pair
     const sourceHistoryPath = path.join(HISTORY_DIR, `tm2m-${id}-source.html`);
